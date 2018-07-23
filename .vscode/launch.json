@@ -1,0 +1,23 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "breast_coco",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/samples/breast_coco/breast_coco.py",
+            "args":[
+                "train",
+                "--dataset",
+                "C:/Ducy/DataSets/breast_coco",
+                "--model",
+                "coco",
+                "--year",
+                "2018"
+            ]
+        }
+    ]
+}

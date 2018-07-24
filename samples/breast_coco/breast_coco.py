@@ -49,7 +49,7 @@ class CocoConfig(Config):
     NAME = "coco"
 
     # 12GB GPU can work on two 1024*1024 images. Adajust by this benchmark 
-    IMAGES_PER_GPU = 1
+    IMAGES_PER_GPU = 2
 
     # Uncomment to train on 8 GPUs (default is 1)
     GPU_COUNT = 1
@@ -63,7 +63,7 @@ class CocoConfig(Config):
     # Therefore, the number of samples processed for each epoch = IMAGES_PER_GPU*GPU_COUNT*steps_per_epochs
     # STEP_PER_EPOCH should typically be equal to the number of unique samples of your dataset divided by the batch size.
     # https://stackoverflow.com/questions/43457862/whats-the-difference-between-samples-per-epoch-and-steps-per-epoch-in-fit-g
-    STEP_PER_EPOCH = 10
+    STEP_PER_EPOCH = 40
 
 ############################################################
 #  Dataset

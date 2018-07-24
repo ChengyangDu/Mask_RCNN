@@ -48,18 +48,20 @@ class CocoConfig(Config):
     # Give the configuration a recognizable name
     NAME = "coco"
 
-    # We use a GPU with 12GB memory, which can fit two images.
-    # Adjust down if you use a smaller GPU.
+    # 12GB GPU can work on two 1024*1024 images. Adajust by this benchmark 
     IMAGES_PER_GPU = 1
 
     # Uncomment to train on 8 GPUs (default is 1)
-    # GPU_COUNT = 8
+    GPU_COUNT = 1
 
     # Number of classes (including background)
     NUM_CLASSES = 1 + 1  # only tumor class
 
     # When you use fit_generator, the number of samples processed for each epoch is
     # batch_size * steps_per_epochs.
+    # batch_size = IMAGES_PER_GPU*GPU_COUNT
+    # Therefore, the number of samples processed for each epoch = IMAGES_PER_GPU*GPU_COUNT*steps_per_epochs
+    # STEP_PER_EPOCH should typically be equal to the number of unique samples of your dataset divided by the batch size.
     # https://stackoverflow.com/questions/43457862/whats-the-difference-between-samples-per-epoch-and-steps-per-epoch-in-fit-g
     STEP_PER_EPOCH = 10
 

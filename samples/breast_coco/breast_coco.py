@@ -58,6 +58,10 @@ class CocoConfig(Config):
     # Number of classes (including background)
     NUM_CLASSES = 1 + 1  # only tumor class
 
+    # When you use fit_generator, the number of samples processed for each epoch is
+    # batch_size * steps_per_epochs.
+    # https://stackoverflow.com/questions/43457862/whats-the-difference-between-samples-per-epoch-and-steps-per-epoch-in-fit-g
+    STEP_PER_EPOCH = 10
 
 ############################################################
 #  Dataset

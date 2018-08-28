@@ -27,6 +27,19 @@ sys.path.append(ROOT_DIR)  # To find local version of the library
 from mrcnn.config import Config
 from mrcnn import model as modellib, utils
 
+import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+
+import random
+
+from mrcnn import visualize
+
+
+from mrcnn.visualize import display_images
+
+from mrcnn.model import log
+
 # Path to trained weights file
 COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
 
@@ -53,10 +66,12 @@ class CocoConfig(Config):
     IMAGES_PER_GPU = 1
 
     # Uncomment to train on 8 GPUs (default is 1)
-    # GPU_COUNT = 8
+    GPU_COUNT = 1
 
     # Number of classes (including background)
     NUM_CLASSES = 1 + 1  # only tumor class
+
+    STEPS_PER_EPOCH = 90
 
 
 ############################################################
@@ -362,6 +377,16 @@ def evaluate_coco(model, dataset, coco, eval_type="bbox", limit=0, image_ids=Non
         t_prediction, t_prediction / len(image_ids)))
     print("Total time: ", time.time() - t_start)
 
+def get_ax(rows=1, cols=1, size=16):
+    """Return a Matplotlib Axes array to be used in
+    all visualizations in the notebook. Provide a
+    central point to control graph sizes.
+    
+    Adjust the size attribute to control how big to render images
+    """
+    _, ax = plt.subplots(rows, cols, figsize=(size*cols, size*rows))
+    return ax
+
 
 ############################################################
 #  Training
@@ -443,7 +468,7 @@ if __name__ == '__main__':
 
     # Load weights
     print("Loading weights ", model_path)
-    # model.load_weights(model_path, by_name=True)
+    model.load_weights(model_path, by_name=True)
 
     # Train or evaluate
     if args.command == "train":
@@ -451,6 +476,7 @@ if __name__ == '__main__':
         # validation set, as as in the Mask RCNN paper.
         dataset_train = CocoDataset()
         dataset_train.load_coco(args.dataset, "train", year=args.year, auto_download=args.download)
+        dataset_train.prepare()
 
         # Validation dataset
         dataset_val = CocoDataset()
@@ -467,7 +493,7 @@ if __name__ == '__main__':
         print("Training network heads")
         model.train(dataset_train, dataset_val,
                     learning_rate=config.LEARNING_RATE,
-                    epochs=40,
+                    epochs=60,
                     layers='heads',
                     augmentation=augmentation)
 
@@ -476,7 +502,7 @@ if __name__ == '__main__':
         print("Fine tune Resnet stage 4 and up")
         model.train(dataset_train, dataset_val,
                     learning_rate=config.LEARNING_RATE,
-                    epochs=120,
+                    epochs=160,
                     layers='4+',
                     augmentation=augmentation)
 
@@ -485,18 +511,38 @@ if __name__ == '__main__':
         print("Fine tune all layers")
         model.train(dataset_train, dataset_val,
                     learning_rate=config.LEARNING_RATE / 10,
-                    epochs=160,
+                    epochs=220,
                     layers='all',
                     augmentation=augmentation)
 
     elif args.command == "evaluate":
         # Validation dataset
         dataset_val = CocoDataset()
-        val_type = "val" if args.year in '2017' else "minival"
-        coco = dataset_val.load_coco(args.dataset, val_type, year=args.year, return_coco=True, auto_download=args.download)
+        coco = dataset_val.load_coco(args.dataset, "val", year=args.year, return_coco=True, auto_download=args.download)
         dataset_val.prepare()
         print("Running COCO evaluation on {} images.".format(args.limit))
-        evaluate_coco(model, dataset_val, coco, "bbox", limit=int(args.limit))
+        evaluate_coco(model, dataset_val, coco, "bbox", limit = int(args.limit))
+    elif args.command == "inference":
+        #inference
+        dataset_val = CocoDataset()
+        coco = dataset_val.load_coco(args.dataset, "val", year=args.year, return_coco=True, auto_download=args.download)
+        dataset_val.prepare()
+        image_id = random.choice(dataset_val.image_ids)
+        image, image_meta, gt_class_id, gt_bbox, gt_mask = modellib.load_image_gt(dataset_val, config, image_id, use_mini_mask=False)
+        info = dataset_val.image_info[image_id]
+        print("image ID: {}.{} ({}) {}".format(info["source"], info["id"], image_id, 
+                                       dataset_val.image_reference(image_id)))
+
+        # Run object detection
+        results = model.detect([image], verbose=1)
+
+        ax = get_ax(1)
+        r = results[0]
+        visualize.display_instances(image, r['rois'], r['masks'], r['class_ids'], dataset_val.class_names, r['scores'], ax=ax,title="Predictions")
+        log("gt_class_id", gt_class_id)
+        log("gt_bbox", gt_bbox)
+        log("gt_mask", gt_mask)
+
     else:
         print("'{}' is not recognized. "
               "Use 'train' or 'evaluate'".format(args.command))

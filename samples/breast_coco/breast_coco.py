@@ -472,7 +472,11 @@ if __name__ == '__main__':
 
     # Load weights
     print("Loading weights ", model_path)
-    model.load_weights(model_path, by_name=True)
+    # To train from the pre-trained COCO weights, edit coco.py on line 469, 
+    # adding exclude=['mrcnn_class_logits', 'mrcnn_bbox_fc', 'mrcnn_bbox', 'mrcnn_mask'] to the load_weights call. 
+    # Then run using python coco.py train --dataset=/path/to/data --model=coco
+    # https://github.com/matterport/Mask_RCNN/issues/247
+    model.load_weights(model_path, by_name=True, exclude=['mrcnn_class_logits', 'mrcnn_bbox_fc', 'mrcnn_bbox', 'mrcnn_mask'])
 
     # Train or evaluate
     if args.command == "train":
@@ -497,27 +501,27 @@ if __name__ == '__main__':
         print("Training network heads")
         model.train(dataset_train, dataset_val,
                     learning_rate=config.LEARNING_RATE,
-                    epochs=60,
+                    epochs=200,
                     layers='heads',
                     augmentation=augmentation)
 
-        # Training - Stage 2
-        # Finetune layers from ResNet stage 4 and up
-        print("Fine tune Resnet stage 4 and up")
-        model.train(dataset_train, dataset_val,
-                    learning_rate=config.LEARNING_RATE,
-                    epochs=160,
-                    layers='4+',
-                    augmentation=augmentation)
+        # # Training - Stage 2
+        # # Finetune layers from ResNet stage 4 and up
+        # print("Fine tune Resnet stage 4 and up")
+        # model.train(dataset_train, dataset_val,
+        #             learning_rate=config.LEARNING_RATE,
+        #             epochs=160,
+        #             layers='4+',
+        #             augmentation=augmentation)
 
-        # Training - Stage 3
-        # Fine tune all layers
-        print("Fine tune all layers")
-        model.train(dataset_train, dataset_val,
-                    learning_rate=config.LEARNING_RATE / 10,
-                    epochs=220,
-                    layers='all',
-                    augmentation=augmentation)
+        # # Training - Stage 3
+        # # Fine tune all layers
+        # print("Fine tune all layers")
+        # model.train(dataset_train, dataset_val,
+        #             learning_rate=config.LEARNING_RATE / 10,
+        #             epochs=220,
+        #             layers='all',
+        #             augmentation=augmentation)
 
     elif args.command == "evaluate":
         # Validation dataset
